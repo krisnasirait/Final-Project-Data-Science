@@ -1,0 +1,153 @@
+---
+title: "Russian tourist attractions"
+output:
+  pdf_document: default
+  html_document: default
+date: "2022-11-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load csv file tourist_attraction.csv
+
+```{r}
+mydata<-read.csv("E:/Kuliah/5th Sem/Prak Data Science/Final Project/tourist_attractions.csv")
+attach(mydata)
+head(mydata)
+View(mydata)
+```
+
+Load library yang diperlukan
+
+```{r}
+library(readr)   
+library(tidyr)  
+library(dplyr)   
+library("ggplot2")
+library(tidyverse)
+library(MASS)
+library(RColorBrewer)
+```
+
+Load library readr untuk membaca data csv yang ada, kemudian membuat summary dari data tersebut
+
+```{r}
+library(readr)
+mydata<-read.csv("E:/Kuliah/5th Sem/Prak Data Science/Final Project/tourist_attractions.csv")
+summary(mydata)
+
+#Cleaning data
+mydata <- mydata[mydata$locality != "", ]
+mydata <- mydata[mydata$geolocation != "Not found", ]
+```
+
+
+Bar chart jumlah tourist attraction dari tiap type 
+
+```{r}
+ggplot(mydata, aes(x=type)) + 
+    geom_bar()+
+    coord_flip()
+```
+
+Top 10 tourist attraction berdasarkan jumlah
+
+```{r}
+#membuat data frame baru count_attr untuk menampung top 10 berdasarkan jumlah nama tourist attraction yang sama
+count_attr <- mydata %>% 
+  group_by(name) %>% 
+  summarise(count = n()) %>% 
+  arrange(desc(count)) %>% 
+  head(10)
+
+ggplot(count_attr, aes(x=name, y=count)) + 
+    geom_bar(stat="identity", fill="steelblue") + 
+    coord_flip() + 
+    theme_minimal() + 
+    labs(title = "Top 10 Tourist Attraction Based on Count", x = "Name", y = "Count")
+```
+
+Menghitung jumlah tourist attraction di setiap region dan ditampilkan dalam bentuk chart
+
+```{r}
+mydata %>% 
+  group_by(region) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(x = region, y = count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+count<-mydata %>% group_by(region) %>% summarise(jumlah = n())
+```
+
+Bar chart top 10 region dengan tourist attraction terbanyak
+  
+```{r}
+ count <- count %>%
+  arrange(desc(jumlah)) %>%
+  head(10)
+
+ggplot(count, aes(x=region, y=jumlah)) + 
+      geom_bar(stat="identity", fill="steelblue") + 
+      coord_flip() + 
+      theme_minimal() + 
+      labs(title = "Top 10 Region Based on Jumlah", x = "Region", y = "Jumlah")
+```
+
+Plot  tourist attraction based on Jumlah
+
+```{r}
+#hitung jumlah tourist attraction di tiap region
+
+  mydata$jumlah <- 1
+  amount_tourist_attraction <- mydata %>% group_by(region) %>% summarise(jumlah = sum(jumlah))
+  
+#membuat initial berdasarkan region
+  
+amount_tourist_attraction$initial <- substr(amount_tourist_attraction$region, 1, 3)
+
+#membuat plot initial tourist attraction berdasar jumlah  
+ggplot(amount_tourist_attraction, aes(x=initial, y=jumlah)) + 
+    geom_point() + 
+    coord_flip() + 
+    theme_minimal() + 
+    labs(title = "Plot Tourist Atraction Based On Jumlah", x = "Initial", y = "Jumlah")
+```
+
+Shiny for Word cloud jenis tourist attraction 
+
+```{r}
+library(shiny)
+library(wordcloud)
+library(RColorBrewer)
+ui <- fluidPage(
+  titlePanel("Word Cloud"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("input", "Select a wordcloud:", 
+                  choices = c("type", "name", "region", "locality", "geolocation"))
+    ),
+    mainPanel(
+      plotOutput("wordcloud")
+    )
+  )
+)
+server <- function(input, output) {
+  output$wordcloud <- renderPlot({
+    wordcloud(mydata[,input$input], max.words = 100, random.order = FALSE, rot.per = 0.35, 
+              colors = brewer.pal(8, "Dark2"))
+  })
+}
+shinyApp(ui = ui, server = server, options = list(height = "500px"))
+```
+
+
+Word cloud jenis tourist attraction
+
+```{r}
+library(wordcloud)
+library(RColorBrewer)
+wordcloud(mydata$type, max.words = 100, random.order = FALSE, rot.per = 0.35, 
+          colors = brewer.pal(8, "Dark2"))
+```
