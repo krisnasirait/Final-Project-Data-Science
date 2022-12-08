@@ -4,5 +4,5 @@
 
 
 Anggota Kelompok : 
-Krisna Pande Raja Sirait 123200089
+Krisna Pande Raja Sirait 123200089 / 
 Indrawani 123200018
